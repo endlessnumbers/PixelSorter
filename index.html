@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Pixel Sorter</title>
+</head>
+<body>
+    <h1>Why are we doing this?</h1>
+
+    <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
+
+    <canvas id="imageCanvas"></canvas>
+
+    <script>
+        var imageLoader = document.getElementById('imageLoader');
+        imageLoader.addEventListener('change', updateImage, false);
+        var canvas = document.getElementById('imageCanvas');
+        var ctx = canvas.getContext('2d');
+
+        function updateImage(input) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var image = new Image();
+                image.onload = function() {
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    ctx.drawImage(image, 0, 0);
+                }
+                image.src = event.target.result;
+            }
+            reader.readAsDataURL(input.target.files[0])
+        }
+    </script>
+</body>
+</html>
