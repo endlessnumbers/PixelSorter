@@ -12,26 +12,6 @@
     <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
 
     <canvas id="imageCanvas"></canvas>
-
-    <script>
-        var imageLoader = document.getElementById('imageLoader');
-        imageLoader.addEventListener('change', updateImage, false);
-        var canvas = document.getElementById('imageCanvas');
-        var ctx = canvas.getContext('2d');
-
-        function updateImage(input) {
-            var reader = new FileReader();
-            reader.onload = function(event) {
-                var image = new Image();
-                image.onload = function() {
-                    canvas.width = image.width;
-                    canvas.height = image.height;
-                    ctx.drawImage(image, 0, 0);
-                }
-                image.src = event.target.result;
-            }
-            reader.readAsDataURL(input.target.files[0])
-        }
-    </script>
+    <script src="scripts/imageLoader.js"></script>
 </body>
 </html>
