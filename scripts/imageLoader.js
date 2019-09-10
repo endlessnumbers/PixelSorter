@@ -5,42 +5,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function updateImage(input) {
     var reader = new FileReader();
-    // var canvas = document.getElementById('imageCanvas');
-    // var ctx = canvas.getContext('2d');
     reader.onload = function(event) {
         var image = new Image();
-        // image.onload = function() {
-        //     canvas.width = image.width;
-        //     canvas.height = image.height;
-        //     ctx.drawImage(image, image.width / 2, 0, image.width / 2, image.height,
-        //       0, 0, image.width / 2, image.height);
-        //     ctx.drawImage(image, 0, 0, image.width / 2, image.height,
-        //       image.width / 2, 0, image.width / 2, image.height);
-        // }
-        image.onload = scrambleImage;
         image.src = event.target.result;
+        image.onload = scrambleImage(image);
     }
     reader.readAsDataURL(input.target.files[0])
 }
 
-function scrambleImage(image) {
+function drawToScreen(image, blocks) {
     var canvas = document.getElementById('imageCanvas');
     var ctx = canvas.getContext('2d');
+    canvas.width = image.width;
+    canvas.height = image.height;
 
-    const n = 8;
+    blocks.forEach(function(e) {
+        ctx.drawImage(image, e.startPos[0], e.startPos[1], e.size[0], e.size[1],
+            e.destPos[0], e.destPos[1], e.size[0], e.size[1]);
+    })
+}
+
+function scrambleImage(image) {
+    const n = 256;
 
     // container of objects to sort, each with a source x and y,
     // a destination x and y, and a key to define their sorted position
     var blocks = [];
+    var startPositions = [];
 
-    var blockHeight = image.height / n;
-    var blockWidth = image.width / n;
+    var blockHeight = image.height / 16;
+    var blockWidth = image.width / 16;
     var startX = 0, startY = 0;
-    for (int i = 0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
         blocks.push({
             id: i,
             startPos: [startX, startY],
+            size: [blockWidth, blockHeight],
             destPos: [0, 0]
         });
+        startPositions.push([startX, startY]);
+        startX += blockWidth;
+        // start new row when necessary
+        if (startX >= image.width) {
+            startY += blockHeight;
+            startX = 0;
+        }
     }
+    blocks = scrambleBlocks(blocks, startPositions);
+    drawToScreen(image, blocks);
+}
+
+function scrambleBlocks(blocks, possibleStarts) {
+    shuffle(possibleStarts);
+    for (var i = 0; i < blocks.length; i++) {
+        blocks[i].destPos = possibleStarts[i];
+    }
+    return blocks;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
