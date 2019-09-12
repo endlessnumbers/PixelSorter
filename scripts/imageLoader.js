@@ -1,21 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
     var imageLoader = document.getElementById('imageLoader');
     imageLoader.addEventListener('change', updateImage, false);
+    var sortButton = document.getElementById('submitButton');
+    sortButton.addEventListener('click', bubbleSort, false);
 })
+
+var image;
+var blocks;
+var canvas = document.getElementById('imageCanvas');
+var ctx = canvas.getContext('2d');
 
 function updateImage(input) {
     var reader = new FileReader();
     reader.onload = function(event) {
-        var image = new Image();
+        image = new Image();
         image.src = event.target.result;
         image.onload = scrambleImage(image);
     }
     reader.readAsDataURL(input.target.files[0])
 }
 
-function drawToScreen(image, blocks) {
-    var canvas = document.getElementById('imageCanvas');
-    var ctx = canvas.getContext('2d');
+function drawToScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     canvas.width = image.width;
     canvas.height = image.height;
 
@@ -30,7 +36,7 @@ function scrambleImage(image) {
 
     // container of objects to sort, each with a source x and y,
     // a destination x and y, and a key to define their sorted position
-    var blocks = [];
+    blocks = [];
     var startPositions = [];
 
     var blockHeight = image.height / 16;
@@ -51,11 +57,11 @@ function scrambleImage(image) {
             startX = 0;
         }
     }
-    blocks = scrambleBlocks(blocks, startPositions);
-    drawToScreen(image, blocks);
+    blocks = scrambleBlocks(startPositions);
+    drawToScreen();
 }
 
-function scrambleBlocks(blocks, possibleStarts) {
+function scrambleBlocks(possibleStarts) {
     shuffle(possibleStarts);
     for (var i = 0; i < blocks.length; i++) {
         blocks[i].destPos = possibleStarts[i];
@@ -63,10 +69,33 @@ function scrambleBlocks(blocks, possibleStarts) {
     return blocks;
 }
 
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
+function shuffle() {
+    for (let i = blocks.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
     }
-    return array;
+    return blocks;
+}
+
+function bubbleSort(e) {
+    for (let i = 0; i < blocks.length; i++) {
+        for (let j = 0; j < blocks.length - i - 1; j++) {
+            if (blocks[j].id > blocks[j+1].id) {
+                //window.requestAnimationFrame(function() {
+                drawToScreen();
+                let temp = {
+                    id: blocks[j+1].id,
+                    startPos: blocks[j+1].startPos,
+                    size: blocks[j+1].size,
+                    destPos: blocks[j+1].destPos
+                };
+                temp.destPos = blocks[j].destPos;
+                blocks[j].destPos = blocks[j+1].destPos;
+                blocks[j+1].destPos = temp.destPos;
+                blocks[j+1] = blocks[j];
+                blocks[j] = temp;
+                //});
+            }
+        }
+    }
 }
