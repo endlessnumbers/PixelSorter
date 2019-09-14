@@ -28,7 +28,7 @@ function drawToScreen() {
     blocks.forEach(function(e) {
         ctx.drawImage(image, e.startPos[0], e.startPos[1], e.size[0], e.size[1],
             e.destPos[0], e.destPos[1], e.size[0], e.size[1]);
-    })
+    });
 }
 
 function scrambleImage(image) {
@@ -39,7 +39,7 @@ function scrambleImage(image) {
     blocks = [];
     var startPositions = [];
 
-    var blockHeight = image.height / 16;
+    var blockHeight = image.height /16;
     var blockWidth = image.width / 16;
     var startX = 0, startY = 0;
     for (var i = 0; i < n; i++) {
@@ -78,24 +78,34 @@ function shuffle() {
 }
 
 function bubbleSort(e) {
+    let timeout = 50;
     for (let i = 0; i < blocks.length; i++) {
         for (let j = 0; j < blocks.length - i - 1; j++) {
             if (blocks[j].id > blocks[j+1].id) {
-                //window.requestAnimationFrame(function() {
-                drawToScreen();
-                let temp = {
-                    id: blocks[j+1].id,
-                    startPos: blocks[j+1].startPos,
-                    size: blocks[j+1].size,
-                    destPos: blocks[j+1].destPos
-                };
-                temp.destPos = blocks[j].destPos;
-                blocks[j].destPos = blocks[j+1].destPos;
-                blocks[j+1].destPos = temp.destPos;
-                blocks[j+1] = blocks[j];
-                blocks[j] = temp;
-                //});
+                let tempId = blocks[j+1].id;
+                blocks[j+1].id = blocks[j].id;
+                blocks[j].id = tempId;
+                setTimeout(sortStep, timeout, j);
+            } else {
+                setTimeout(function() {
+                    drawToScreen();
+                }, timeout);
             }
         }
     }
+}
+
+function sortStep(j) {
+    let temp = {
+        id: blocks[j+1].id,
+        startPos: blocks[j+1].startPos,
+        size: blocks[j+1].size,
+        destPos: blocks[j+1].destPos
+    };
+    temp.destPos = blocks[j].destPos;
+    blocks[j].destPos = blocks[j+1].destPos;
+    blocks[j+1].destPos = temp.destPos;
+    blocks[j+1] = blocks[j];
+    blocks[j] = temp;
+    drawToScreen();
 }
