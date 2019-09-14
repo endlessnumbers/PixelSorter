@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var imageLoader = document.getElementById('imageLoader');
     imageLoader.addEventListener('change', updateImage, false);
     var sortButton = document.getElementById('submitButton');
-    sortButton.addEventListener('click', sort, false);
+    sortButton.addEventListener('click', bubbleSort, false);
 })
 
 var image;
@@ -39,7 +39,7 @@ function scrambleImage(image) {
     blocks = [];
     var startPositions = [];
 
-    var blockHeight = image.height / 16;
+    var blockHeight = image.height /16;
     var blockWidth = image.width / 16;
     var startX = 0, startY = 0;
     for (var i = 0; i < n; i++) {
@@ -77,64 +77,35 @@ function shuffle() {
     return blocks;
 }
 
-// alternative idea :
-// do one individual sort step on setInterval (i.e. per interval)
-// once it's sorted, stop doing it. maybe the function could return a
-// bool to say if its sorted?
-
-// maybe we should call bubbleSort recursively, using
-// window.requestAnimationFrame(bubbleSort)
-// see https://stackoverflow.com/questions/28870431/update-html-canvas-in-a-non-blocking-way
-// could call method with single param for the index of element we are
-// sorting, and once we've finished a pass we go back and start again.
-
-function sort(e, index = 0, pass = 0) {
-    drawToScreen();
-    if (blocks[index].id > blocks[index+1].id) {
-        let temp = {
-            id: blocks[index+1].id,
-            startPos: blocks[index+1].startPos,
-            size: blocks[index+1].size,
-            destPos: blocks[index+1].destPos
-        };
-        temp.destPos = blocks[index].destPos;
-        blocks[index].destPos = blocks[index+1].destPos;
-        blocks[index+1].destPos = temp.destPos;
-        blocks[index+1] = blocks[index];
-        blocks[index] = temp;
-    }
-    if (index < 256 - pass - 1) {
-        index++;
-    }
-    else {
-        index = 0;
-        pass++;
-    }
-    if (pass < 256)
-        window.requestAnimationFrame(sort(e, index, pass));
-}
-
 function bubbleSort(e) {
-    //setInterval(function() {
-        for (let i = 0; i < blocks.length; i++) {
-            for (let j = 0; j < blocks.length - i - 1; j++) {
-                if (blocks[j].id > blocks[j+1].id) {
-                    //setTimeout(function() {
-                        let temp = {
-                            id: blocks[j+1].id,
-                            startPos: blocks[j+1].startPos,
-                            size: blocks[j+1].size,
-                            destPos: blocks[j+1].destPos
-                        };
-                        temp.destPos = blocks[j].destPos;
-                        blocks[j].destPos = blocks[j+1].destPos;
-                        blocks[j+1].destPos = temp.destPos;
-                        blocks[j+1] = blocks[j];
-                        blocks[j] = temp;
-                    //}, 10 + i + j);
-                    setTimeout(drawToScreen(), 10 * i);
-                }
+    let timeout = 50;
+    for (let i = 0; i < blocks.length; i++) {
+        for (let j = 0; j < blocks.length - i - 1; j++) {
+            if (blocks[j].id > blocks[j+1].id) {
+                let tempId = blocks[j+1].id;
+                blocks[j+1].id = blocks[j].id;
+                blocks[j].id = tempId;
+                setTimeout(sortStep, timeout, j);
+            } else {
+                setTimeout(function() {
+                    drawToScreen();
+                }, timeout);
             }
         }
-    //}, 20);
+    }
+}
+
+function sortStep(j) {
+    let temp = {
+        id: blocks[j+1].id,
+        startPos: blocks[j+1].startPos,
+        size: blocks[j+1].size,
+        destPos: blocks[j+1].destPos
+    };
+    temp.destPos = blocks[j].destPos;
+    blocks[j].destPos = blocks[j+1].destPos;
+    blocks[j+1].destPos = temp.destPos;
+    blocks[j+1] = blocks[j];
+    blocks[j] = temp;
+    drawToScreen();
 }
