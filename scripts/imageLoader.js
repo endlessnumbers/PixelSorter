@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var imageLoader = document.getElementById('imageLoader');
     imageLoader.addEventListener('change', updateImage, false);
     var sortButton = document.getElementById('submitButton');
-    sortButton.addEventListener('click', bubbleSort, false);
+    sortButton.addEventListener('click', callSort, false);
+    var testButton = document.getElementById('testButton');
+    testButton.addEventListener('click', sortTest, false);
 })
 
 var image;
@@ -20,7 +22,7 @@ function updateImage(input) {
     reader.readAsDataURL(input.target.files[0])
 }
 
-function drawToScreen() {
+function drawToScreen(array) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     canvas.width = image.width;
     canvas.height = image.height;
@@ -58,18 +60,18 @@ function scrambleImage(image) {
         }
     }
     blocks = scrambleBlocks(startPositions);
-    drawToScreen();
+    drawToScreen(blocks);
 }
 
 function scrambleBlocks(possibleStarts) {
-    shuffle(possibleStarts);
+    shuffle(blocks);
     for (var i = 0; i < blocks.length; i++) {
         blocks[i].destPos = possibleStarts[i];
     }
     return blocks;
 }
 
-function shuffle() {
+function shuffle(array) {
     for (let i = blocks.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
@@ -77,7 +79,30 @@ function shuffle() {
     return blocks;
 }
 
-function bubbleSort(e) {
+function callSort(e) {
+    var element = document.getElementById("sortSelect");
+    var sortString = element.options[element.selectedIndex].value;
+
+    switch (sortString) {
+      case "bubbleSort":
+        bubbleSort();
+        break;
+      case "quickSort":
+        blocks = quickSort(blocks);
+        drawToScreen(blocks);
+        break;
+      case "insertionSort":
+        insertionSort();
+        break;
+      case "heapSort":
+        heapSort();
+        break;
+      default:
+        break;
+    }
+}
+
+function bubbleSort() {
     let timeout = 50;
     for (let i = 0; i < blocks.length; i++) {
         for (let j = 0; j < blocks.length - i - 1; j++) {
@@ -85,17 +110,17 @@ function bubbleSort(e) {
                 let tempId = blocks[j+1].id;
                 blocks[j+1].id = blocks[j].id;
                 blocks[j].id = tempId;
-                setTimeout(sortStep, timeout, j);
+                setTimeout(bubbleSortStep, timeout, j);
             } else {
                 setTimeout(function() {
-                    drawToScreen();
+                    drawToScreen(blocks);
                 }, timeout);
             }
         }
     }
 }
 
-function sortStep(j) {
+function bubbleSortStep(j) {
     let temp = {
         id: blocks[j+1].id,
         startPos: blocks[j+1].startPos,
@@ -107,5 +132,72 @@ function sortStep(j) {
     blocks[j+1].destPos = temp.destPos;
     blocks[j+1] = blocks[j];
     blocks[j] = temp;
-    drawToScreen();
+    drawToScreen(blocks);
+}
+
+function sortTest() {
+    var testArray = [];
+    for (let i = 0; i < 100; i++) {
+        testArray.push(i);
+    }
+    shuffle(testArray);
+    testArray = quickSort(testArray);
+}
+
+function quickSort(array) {
+    if (array.length <= 1)
+        return array;
+
+    var pivot = {
+        id: array[0].id,
+        startPos: array[0].startPos,
+        size: array[0].size,
+        destPos: array[0].destPos
+    };
+    var greater = [];
+    var less = [];
+
+
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].id > pivot.id) {
+            // let swapItem = array[pivot.id + greater.length];
+            // let temp = array[i].destPos;
+            // console.log('pivot: ' + pivot.id);
+            // console.log('length: ' + greater.length);
+            // console.log('swapitem: ' + (pivot.id + greater.length));
+            // array[i].destPos = swapItem.destPos;
+            // swapItem.destPos = temp;
+            greater.push({
+              id: array[i].id,
+              startPos: array[i].startPos,
+              size: array[i].size,
+              destPos: array[i].destPos
+            });
+        } else if (array[i].id < pivot.id) {
+            // let swapItem = array[less.length];
+            // let temp = array[i].destPos;
+            // array[i].destPos = swapItem.destPos;
+            // swapItem.destPos = temp;
+            less.push({
+              id: array[i].id,
+              startPos: array[i].startPos,
+              size: array[i].size,
+              destPos: array[i].destPos
+            });
+        }
+    }
+    for (let i = 0; i < less.length; i++) {
+        less[i].destPos = array[i].destPos;
+    }
+    pivot.destPos = array[less.length].destPos;
+    for (let i = less.length + 1; i < less.length + greater.length + 1; i++) {
+        greater[i - less.length - 1].destPos = array[i].destPos;
+    }
+
+    greater = quickSort(greater);
+    less = quickSort(less);
+    less.push(pivot);
+    setTimeout(drawToScreen, 50, greater);
+    setTimeout(drawToScreen, 50, less);
+    return less.concat(greater);
 }
