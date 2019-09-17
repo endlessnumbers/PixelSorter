@@ -72,11 +72,11 @@ function scrambleBlocks(possibleStarts) {
 }
 
 function shuffle(array) {
-    for (let i = blocks.length - 1; i > 0; i--) {
+    for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+        [array[i], array[j]] = [array[j], array[i]];
     }
-    return blocks;
+    return array;
 }
 
 function callSort(e) {
@@ -92,10 +92,7 @@ function callSort(e) {
         drawToScreen(blocks);
         break;
       case "insertionSort":
-        insertionSort();
-        break;
-      case "heapSort":
-        heapSort();
+        insertionSort(blocks);
         break;
       default:
         break;
@@ -110,7 +107,7 @@ function bubbleSort() {
                 let tempId = blocks[j+1].id;
                 blocks[j+1].id = blocks[j].id;
                 blocks[j].id = tempId;
-                setTimeout(bubbleSortStep, timeout, j);
+                setTimeout(swapBlocks, timeout, j);
             } else {
                 setTimeout(function() {
                     drawToScreen(blocks);
@@ -120,7 +117,7 @@ function bubbleSort() {
     }
 }
 
-function bubbleSortStep(j) {
+function swapBlocks(j) {
     let temp = {
         id: blocks[j+1].id,
         startPos: blocks[j+1].startPos,
@@ -141,7 +138,7 @@ function sortTest() {
         testArray.push(i);
     }
     shuffle(testArray);
-    testArray = quickSort(testArray);
+    testArray = insertionSort(testArray);
 }
 
 function quickSort(array) {
@@ -160,13 +157,6 @@ function quickSort(array) {
 
     for (let i = 0; i < array.length; i++) {
         if (array[i].id > pivot.id) {
-            // let swapItem = array[pivot.id + greater.length];
-            // let temp = array[i].destPos;
-            // console.log('pivot: ' + pivot.id);
-            // console.log('length: ' + greater.length);
-            // console.log('swapitem: ' + (pivot.id + greater.length));
-            // array[i].destPos = swapItem.destPos;
-            // swapItem.destPos = temp;
             greater.push({
               id: array[i].id,
               startPos: array[i].startPos,
@@ -174,10 +164,6 @@ function quickSort(array) {
               destPos: array[i].destPos
             });
         } else if (array[i].id < pivot.id) {
-            // let swapItem = array[less.length];
-            // let temp = array[i].destPos;
-            // array[i].destPos = swapItem.destPos;
-            // swapItem.destPos = temp;
             less.push({
               id: array[i].id,
               startPos: array[i].startPos,
@@ -197,7 +183,30 @@ function quickSort(array) {
     greater = quickSort(greater);
     less = quickSort(less);
     less.push(pivot);
-    setTimeout(drawToScreen, 50, greater);
-    setTimeout(drawToScreen, 50, less);
+
+    setTimeout(function() {
+        drawToScreen(greater);
+        drawToScreen(less);
+    }, 50);
+
     return less.concat(greater);
+}
+
+function insertionSort(array) {
+    for (let i = 0; i < array.length; i++) {
+        let current = {
+            id: array[i].id,
+            startPos: array[i].startPos,
+            size: array[i].size,
+            destPos: array[i].destPos
+        }
+        let j = i;
+        while (j > 0 && current.id < array[j - 1].id) {
+            array[j].id = array[j - 1].id;
+            setTimeout(swapBlocks, 50, j - 1);
+            j--;
+        }
+        array[j].id = current.id;
+    }
+
 }
