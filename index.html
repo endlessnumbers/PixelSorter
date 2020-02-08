@@ -1,26 +1,39 @@
 <!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="styles.css">
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Pixel Sorter</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Pixel Sorter</title>
 </head>
 <body>
-    <h1>Why are we doing this?</h1>
-
-    <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
-
-    <select id="sortSelect">
+  <div class="alignCentre">
+    <div class="boxBackground">
+      <h1 class="alignCentre text">Image Sorter</h1>
+    </div>
+    <canvas id="imageCanvas"></canvas>
+    <div id="options">
+      <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
+      <select id="sortSelect">
         <option value="bubbleSort">Bubble Sort</option>
         <option value="quickSort">Quicksort</option>
         <option value="insertionSort">Insertion Sort</option>
-    </select>
-    <button id="submitButton">Sort</button>
+        <option value="selectionSort">Selection Sort</option>
+      </select>
+      <button id="submitButton">Sort!</button>
 
-    <button id="testButton">Test!</button>
-
-    <canvas id="imageCanvas"></canvas>
-    <script src="scripts/imageLoader.js"></script>
+      <button id="rescrambleButton">Re-Scramble!</button>
+    </div>
+    <div class="boxBackground text">
+      <h2>Operation count: </h2>
+      <h4 id="opCount"></h4>
+      <h2>Best Case:</h2>
+      <h4 id="bestCase"></h4>
+      <h2>Worst Case:</h2>
+      <h4 id="worstCase"></h4>
+    </div>
+  </div>
 </body>
+<script src="scripts/imageLoader.js"></script>
 </html>

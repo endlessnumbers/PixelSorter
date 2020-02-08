@@ -3,21 +3,22 @@ document.addEventListener('DOMContentLoaded', function() {
     imageLoader.addEventListener('change', updateImage, false);
     var sortButton = document.getElementById('submitButton');
     sortButton.addEventListener('click', callSort, false);
-    var testButton = document.getElementById('testButton');
-    testButton.addEventListener('click', sortTest, false);
+    var rescrambleButton = document.getElementById('rescrambleButton');
+    rescrambleButton.addEventListener('click', function(){scrambleImage(image)}, false);
 })
-
+const n = 256;
 var image;
 var blocks;
 var canvas = document.getElementById('imageCanvas');
 var ctx = canvas.getContext('2d');
+var opCount;
 
 function updateImage(input) {
     var reader = new FileReader();
     reader.onload = function(event) {
         image = new Image();
         image.src = event.target.result;
-        image.onload = scrambleImage(image);
+        image.onload = setTimeout(scrambleImage, 500, image);
     }
     reader.readAsDataURL(input.target.files[0])
 }
@@ -27,15 +28,13 @@ function drawToScreen(array) {
     canvas.width = image.width;
     canvas.height = image.height;
 
-    blocks.forEach(function(e) {
+    array.forEach(function(e) {
         ctx.drawImage(image, e.startPos[0], e.startPos[1], e.size[0], e.size[1],
             e.destPos[0], e.destPos[1], e.size[0], e.size[1]);
     });
 }
 
 function scrambleImage(image) {
-    const n = 256;
-
     // container of objects to sort, each with a source x and y,
     // a destination x and y, and a key to define their sorted position
     blocks = [];
@@ -82,6 +81,8 @@ function shuffle(array) {
 function callSort(e) {
     var element = document.getElementById("sortSelect");
     var sortString = element.options[element.selectedIndex].value;
+    opCount = 0;
+    updateBestWorst(sortString);
 
     switch (sortString) {
       case "bubbleSort":
@@ -92,11 +93,76 @@ function callSort(e) {
         drawToScreen(blocks);
         break;
       case "insertionSort":
-        insertionSort(blocks);
+        insertionSort();
+        break;
+      case "selectionSort":
+        selectionSort();
         break;
       default:
         break;
     }
+    updateOpCount();
+}
+
+function updateBestWorst(sortString) {
+    let bestCase = document.getElementById("bestCase");
+    let worstCase = document.getElementById("worstCase");
+
+    switch (sortString) {
+      case "bubbleSort":
+        bestCase.innerHTML = "O(1): 1";
+        worstCase.innerHTML = `O(n2): ${n * n}`;
+        break;
+      case "quickSort":
+        bestCase.innerHTML = `O(n log n): ${Math.round(n * Math.log(n))}`;
+        worstCase.innerHTML = `O(n2): ${n * n}`;
+        break;
+      case "insertionSort":
+        bestCase.innerHTML = "O(1): 1";
+        worstCase.innerHTML = `O(n2): ${n * n}`;
+        break;
+      case "selectionSort":
+        bestCase.innerHTML = `O(n): ${n}`;
+        worstCase.innerHTML = `O(n): ${n}`;
+        break;
+      default:
+        break;
+    }
+}
+
+function updateOpCount() {
+    document.getElementById("opCount").innerHTML = opCount;
+}
+
+// find minimum element in array and put it in its correct position
+function selectionSort() {
+    var minimum = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        minimum = i;
+        for (let j = i; j < blocks.length; j++) {
+            // if that block is the one we're looking for
+            if (blocks[j].id < blocks[minimum].id) {
+                minimum = j;
+            }
+        }
+        swapBlocks(i, minimum);
+        opCount++;
+    }
+}
+
+function swapBlocks(firstPos, secondPos) {
+    let temp = {
+        id: blocks[secondPos].id,
+        startPos: blocks[secondPos].startPos,
+        size: blocks[secondPos].size,
+        destPos: blocks[secondPos].destPos
+    };
+    temp.destPos = blocks[firstPos].destPos;
+    blocks[firstPos].destPos = blocks[secondPos].destPos;
+    blocks[secondPos].destPos = temp.destPos;
+    blocks[secondPos] = blocks[firstPos];
+    blocks[firstPos] = temp;
+    drawToScreen(blocks);
 }
 
 function bubbleSort() {
@@ -107,7 +173,8 @@ function bubbleSort() {
                 let tempId = blocks[j+1].id;
                 blocks[j+1].id = blocks[j].id;
                 blocks[j].id = tempId;
-                setTimeout(swapBlocks, timeout, j);
+                opCount++;
+                setTimeout(swapBlocks, timeout, j, j+1);
             } else {
                 setTimeout(function() {
                     drawToScreen(blocks);
@@ -115,21 +182,6 @@ function bubbleSort() {
             }
         }
     }
-}
-
-function swapBlocks(j) {
-    let temp = {
-        id: blocks[j+1].id,
-        startPos: blocks[j+1].startPos,
-        size: blocks[j+1].size,
-        destPos: blocks[j+1].destPos
-    };
-    temp.destPos = blocks[j].destPos;
-    blocks[j].destPos = blocks[j+1].destPos;
-    blocks[j+1].destPos = temp.destPos;
-    blocks[j+1] = blocks[j];
-    blocks[j] = temp;
-    drawToScreen(blocks);
 }
 
 function sortTest() {
@@ -154,8 +206,8 @@ function quickSort(array) {
     var greater = [];
     var less = [];
 
-
-    for (let i = 0; i < array.length; i++) {
+    // separate array by pivot
+    for (let i = 1; i < array.length; i++) {
         if (array[i].id > pivot.id) {
             greater.push({
               id: array[i].id,
@@ -163,6 +215,7 @@ function quickSort(array) {
               size: array[i].size,
               destPos: array[i].destPos
             });
+            opCount++;
         } else if (array[i].id < pivot.id) {
             less.push({
               id: array[i].id,
@@ -170,43 +223,40 @@ function quickSort(array) {
               size: array[i].size,
               destPos: array[i].destPos
             });
+            opCount++;
         }
     }
-    for (let i = 0; i < less.length; i++) {
-        less[i].destPos = array[i].destPos;
+    // make sure items in less appear at start
+    for (let j = 0; j < less.length; j++) {
+        less[j].destPos = array[j].destPos;
     }
     pivot.destPos = array[less.length].destPos;
-    for (let i = less.length + 1; i < less.length + greater.length + 1; i++) {
-        greater[i - less.length - 1].destPos = array[i].destPos;
+    for (let k = less.length + 1; k < less.length + greater.length + 1; k++) {
+        greater[k - less.length - 1].destPos = array[k].destPos;
     }
 
+    less.push(pivot);
     greater = quickSort(greater);
     less = quickSort(less);
-    less.push(pivot);
-
-    setTimeout(function() {
-        drawToScreen(greater);
-        drawToScreen(less);
-    }, 50);
 
     return less.concat(greater);
 }
 
-function insertionSort(array) {
-    for (let i = 0; i < array.length; i++) {
+function insertionSort() {
+    for (let i = 0; i < blocks.length; i++) {
         let current = {
-            id: array[i].id,
-            startPos: array[i].startPos,
-            size: array[i].size,
-            destPos: array[i].destPos
+            id: blocks[i].id,
+            startPos: blocks[i].startPos,
+            size: blocks[i].size,
+            destPos: blocks[i].destPos
         }
         let j = i;
-        while (j > 0 && current.id < array[j - 1].id) {
-            array[j].id = array[j - 1].id;
-            setTimeout(swapBlocks, 50, j - 1);
+        while (j > 0 && current.id < blocks[j - 1].id) {
+            blocks[j].id = blocks[j - 1].id;
+            opCount++;
+            setTimeout(swapBlocks, 50, j - 1, j);
             j--;
         }
-        array[j].id = current.id;
+        blocks[j].id = current.id;
     }
-
 }
